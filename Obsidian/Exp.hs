@@ -19,12 +19,18 @@ import Control.Applicative
 -- Shapes
 import Obsidian.Shape 
 -----------------------------------------------------------------
---
+-- HACKING
 -----------------------------------------------------------------
 data Index sh where
+  -- An index into zerodim
   ZI :: Index Z
-  (::.) :: Index tail -> Value Int -> Index (tail :. ()) 
+  -- index into succdim
+  SuccI :: Index tail -> Value Int -> Index (Succ tail) 
 
+-- Add up dimensionalities 
+type family SAdd a b where
+  SAdd a Z = a
+  SAdd a (Succ b) = Succ (SAdd a b)
 
 
 -----------------------------------------------------------------
@@ -147,11 +153,40 @@ data Grid :: * -> *
 data Block a where
   LiftB     :: Value a -> Block a
   
-  -- | Generate/Convertion to push 
+  -- | Generate/Conversion to push
   Block :: (p <= Block)
         => Shape sh
         -> (Index sh -> Exp p a)
         -> Block (Push sh a)
+  -- this is awkward... may lead to nested Push arrays
+  -- But it is very limiting to demand EltVal a ...
+
+-----------------------------------------------------------------
+-- Experimental zone
+-----------------------------------------------------------------
+
+  -- With some kind of concat operations
+  DistrWarps :: Shape sh -- For each in this shape 
+             -> (Index sh -> Exp Warp (Push sh' a))
+             -- need to concat all sh'
+             -- I think this means sh' needs to
+             -- appended as an innermost dimension onto sh
+             -- -> Block (Push (sh :. sh') a)
+             -- this is wrong (adds it as outermost dim).
+             -- It is also wrong because it requires sh' to be ()
+             -- (If I am right). 
+
+             -- Attempt
+             -> Block (Push (SAdd sh sh') a) 
+
+  Distr :: (p <= Block)
+        => Shape sh
+        -> (Index sh -> Exp p (Push sh' a))
+        -> Block (Push (SAdd sh sh') a) 
+
+-----------------------------------------------------------------
+-- 
+-----------------------------------------------------------------
 
   --  some defunctionalised push things go here
   MapB    :: (a -> b) -> Block (Push sh a) -> Block (Push sh b)
@@ -160,21 +195,23 @@ data Block a where
           -> Block (Push sh a)
           -> Block (Push sh b)
 
-  -- This needs work to support shapes
+  -- This needs work to support multidim shapes
   AppendB :: Int 
-          -> Block (Push (Z:.()) a)
-          -> Block (Push (Z:.()) a)
-          -> Block (Push (Z:.()) a)
+          -> Block (Push DIM1 a)
+          -> Block (Push DIM1 a)
+          -> Block (Push DIM1 a)
           
-  Interleave :: Block (Push (Z:.()) a)
-             -> Block (Push (Z:.()) a)
-             -> Block (Push (Z:.()) a)
+  Interleave :: Block (Push DIM1 a)
+             -> Block (Push DIM1 a)
+             -> Block (Push DIM1 a)
 
   -- defunced permutations
-  -- along outermost dim ? 
+  -- along outermost dim ?
   Reverse :: Block (Push sh a) -> Block (Push sh a)
   Rotate  :: Int -> Block (Push sh a) -> Block (Push sh a) 
 
+  -- Maybe a programming style where most permuting, reorg etc
+  -- is done on push arrays is to be preferred ? 
 
 
 
@@ -221,7 +258,9 @@ data Pull sh a = Pull (Index sh -> a) (Shape sh)
 -- Experimentation 
 -----------------------------------------------------------------
 
-
+-- A little bit awkward that a shape is needed when
+-- the manifest array computed has an associated shape.
+-- That associated shape is, however, locked in into the Exp Block.
 pull :: Shape sh -> Exp Block (Manifest sh a) -> Pull sh (Value a)
 pull sh arr = Pull (\i -> Index arr i) sh
 
