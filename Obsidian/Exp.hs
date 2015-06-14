@@ -83,6 +83,9 @@ data BinOp = Add | Sub | Mul | Div
 --   Them. 
 data Exp p a where
 
+  -- | Lift a value
+  Lift :: Value a -> Exp p a 
+  
   -- | The Sublanguages for different p's are defined separately
   ParmOp :: p a -> Exp p a 
   
@@ -129,21 +132,19 @@ instance Applicative (M a) where
 
 -- | Sequential computations 
 data Seq a where
-  LiftS  :: Value a -> Seq a
+  -- LiftS  :: Value a -> Seq a
 
   -- | Generate or sequential pull to push conversion
-  Seq :: (p <= Seq)
-      => Shape sh
-      -> (Index sh -> Exp p a)
+  Seq :: Shape sh
+      -> (Index sh -> Value a)
       -> Seq (Push sh a) 
           
 data Warp a where
-  LiftW :: Value a -> Warp a 
+  -- LiftW :: Value a -> Warp a 
 
   -- | Generate or warp-parallel pull to push conversion
-  Warp :: (p <= Warp)
-       => Shape sh
-       -> (Index sh -> Exp p a)
+  Warp :: Shape sh
+       -> (Index sh -> Value a)
        -> Warp (Push sh a)
 
 -- Don't know what operations go here yet. 
@@ -151,16 +152,13 @@ data Grid :: * -> *
 
 
 data Block a where
-  LiftB     :: Value a -> Block a
+  -- LiftB     :: Value a -> Block a
   
   -- | Generate/Conversion to push
-  Block :: (p <= Block)
-        => Shape sh
-        -> (Index sh -> Exp p a)
+  Block :: Shape sh
+        -> (Index sh -> Value a)
         -> Block (Push sh a)
-  -- this is awkward... may lead to nested Push arrays
-  -- But it is very limiting to demand EltVal a ...
-
+ 
 -----------------------------------------------------------------
 -- Experimental zone
 -----------------------------------------------------------------
@@ -201,9 +199,14 @@ data Block a where
           -> Block (Push DIM1 a)
           -> Block (Push DIM1 a)
           
-  Interleave :: Block (Push DIM1 a)
-             -> Block (Push DIM1 a)
-             -> Block (Push DIM1 a)
+  InterleaveB :: Block (Push DIM1 a)
+              -> Block (Push DIM1 a)
+              -> Block (Push DIM1 a)
+
+  -- Need some way of flattening nested things.
+  -- Don't know if this is it though. 
+  FlattenB :: Block (Push (Succ d) a)
+           -> Block (Push d a) 
 
   -- defunced permutations
   -- along outermost dim ?
@@ -266,7 +269,7 @@ pull sh arr = Pull (\i -> Index arr i) sh
 
 
 pushBlock :: Pull sh (Value a)  -> Exp Block (Push sh a)
-pushBlock (Pull f sh) = ParmOp $ Block sh ( ParmOp . LiftB . f ) 
+pushBlock (Pull f sh) = ParmOp $ Block sh f 
 
 
 freezePull :: Pull sh (Value a) -> Exp Block (Manifest sh a)
