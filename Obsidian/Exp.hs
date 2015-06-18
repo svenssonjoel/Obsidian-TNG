@@ -187,6 +187,7 @@ data Block a where
 -----------------------------------------------------------------
 
   --  some defunctionalised push things go here
+  --  Should be "Value a" "Value b" everywhere (I think) 
   MapB    :: (a -> b) -> Block (Push sh a) -> Block (Push sh b)
   
   IMapB   :: (Index sh -> a -> b)
@@ -210,8 +211,22 @@ data Block a where
 
   -- defunced permutations
   -- along outermost dim ?
+  -- This is a bit confusing 
   Reverse :: Block (Push sh a) -> Block (Push sh a)
   Rotate  :: Int -> Block (Push sh a) -> Block (Push sh a) 
+
+  
+  Permute :: (Index sh -> Index sh)
+          -> (Maybe (Index sh -> Index sh)) -- programmer supplied inverse
+          -> Block (Push sh a)
+          -> Block (Push sh a)
+
+  -- Is this operation even possible ? 
+  Reshape :: Shape sh' -- new shape ?
+          -> (Index sh -> Index sh') -- what to do with the
+                                     -- indices
+          -> Block (Push sh a)
+          -> Block (Push sh' a) 
 
   -- Maybe a programming style where most permuting, reorg etc
   -- is done on push arrays is to be preferred ? 
