@@ -221,7 +221,8 @@ data Block a where
           -> Block (Push sh a)
           -> Block (Push sh a)
 
-  -- Is this operation even possible ? 
+  -- Is this operation even possible ?
+  -- If this is OK it provides Flatten! 
   Reshape :: Shape sh' -- new shape ?
           -> (Index sh -> Index sh') -- what to do with the
                                      -- indices
