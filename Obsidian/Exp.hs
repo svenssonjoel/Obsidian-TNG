@@ -93,7 +93,8 @@ data Exp p a where
   RunM :: M p a -> Exp p a 
 
 -- | The M Monad is implemented Björn & Benny style. 
---   Thus far very sketchy. 
+--   Thus far very sketchy.
+--   Not sure p parameter is useful at all. 
 data M p a where
 
   -- | Allocate some data. 
