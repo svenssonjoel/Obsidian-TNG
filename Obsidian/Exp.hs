@@ -101,7 +101,7 @@ data M p a where
   Malloc :: Shape sh -> M p (Manifest sh a)  
   
   -- | Apply a push array (push it to memory)
-  PApply :: Exp p (Push sh a) -> (Index sh -> a -> M p ()) -> M p () 
+  PApply :: Exp p (Push sh a) -> (Index sh -> a -> M p ()) -> M p ()
 
   -- | Assign into a Manifest arrays.
   --   Given a manifest array this slots directly into PApply 
@@ -261,8 +261,6 @@ type a <= b = (LessThanOrEqual a b ~ True)
 
 
 
-
-
 -----------------------------------------------------------------
 -- Pull arrays
 -----------------------------------------------------------------
@@ -279,7 +277,8 @@ data Pull sh a = Pull (Index sh -> a) (Shape sh)
 
 -- A little bit awkward that a shape is needed when
 -- the manifest array computed has an associated shape.
--- That associated shape is, however, locked in into the Exp Block.
+-- That associated shape is, however, locked away inside of the Exp Block.
+-- Lengths are static,   however, so could inspect the Exp and find the length.
 pull :: Shape sh -> Exp Block (Manifest sh a) -> Pull sh (Value a)
 pull sh arr = Pull (\i -> Index arr i) sh
 
