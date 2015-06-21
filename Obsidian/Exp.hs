@@ -27,6 +27,9 @@ data Index sh where
   -- index into succdim
   SuccI :: Index tail -> Value Int -> Index (Succ tail) 
 
+ixVal :: Index (Succ sh) -> Value Int
+ixVal (SuccI _ v) = v 
+
 -- Add up dimensionalities 
 type family SAdd a b where
   SAdd a Z = a
@@ -64,6 +67,13 @@ data Value a where
   Literal  :: Show a => a -> Value a
   Variable :: String -> Value a
   BinOp    :: BinOp -> Value a -> Value a -> Value a
+
+  -- | As it stands now, tuples are needed in the embedding.
+  --   This needs a lot more.. 
+  Tup :: Value a -> Value b -> Value (a,b)
+  Fst :: Value (a,b) -> Value a
+  Snd :: Value (a,b) -> Value b 
+  
 
   -- | A Expression computing a scalar at level p can be
   --  converted into a Value
@@ -296,3 +306,8 @@ freezePull arr@(Pull f n) =
     return manifest
 
 
+test :: Pull (Succ Z) (Value (Int, Int))
+test = Pull (\i -> Tup (ixVal i) (ixVal i)) (Succ Z 10) 
+
+test2 :: Exp Block (Manifest (Succ Z) (Int, Int))
+test2 = freezePull test
