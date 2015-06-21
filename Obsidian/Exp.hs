@@ -1,6 +1,6 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
-{- LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
 {- LANGUAGE OverlappingInstances #-} 
 
 {-# LANGUAGE TypeOperators #-}
@@ -59,8 +59,26 @@ class EltVal a
 
 instance EltVal Int
 instance EltVal Float
-instance (EltVal a, EltVal b) => EltVal (a,b) 
 
+
+-- | Handling of tuples
+
+tup = undefined
+
+-----------------------------------------------------------------
+-- Type-wise 
+-- (a,b,c,d) => (a :. (b :. (c :. (d :. ()))))
+-- (a,(b,c)) => (a :. ((b :. (c :. ())) :. ()))
+
+-- Data-wise
+-- (a,b,c,d) => TupS a (TupS b (TupS c (Tup1 d)))
+-- (a,(b,c)) => TupS a (Tup1 (TupS b (Tup1 c)))
+
+-- Just an initial experiment. 
+
+----------------------------------------------------------------- 
+
+  
 
 -- | Value level expressions.
 data Value a where
@@ -68,14 +86,17 @@ data Value a where
   Variable :: String -> Value a
   BinOp    :: BinOp -> Value a -> Value a -> Value a
 
-  -- | As it stands now, tuples are needed in the embedding.
-  --   This needs a lot more.. 
-  Tup :: Value a -> Value b -> Value (a,b)
-  Fst :: Value (a,b) -> Value a
-  Snd :: Value (a,b) -> Value b 
+
+  -- TupE     :: Tuple t => t -> Value (TRep t) 
+
+  -- -- | As it stands now, tuples are needed in the embedding.
+  -- --   This needs a lot more.. 
+  -- Tup :: Value a -> Value b -> Value (a,b)
+  -- Fst :: Value (a,b) -> Value a
+  -- Snd :: Value (a,b) -> Value b 
   
 
-  -- | A Expression computing a scalar at level p can be
+  -- | An Expression computing a scalar at level p can be
   --  converted into a Value
   --  TODO: Look for restrictions that should apply here 
   UnLift   :: EltVal a => Exp p a -> Value a
@@ -306,8 +327,10 @@ freezePull arr@(Pull f n) =
     return manifest
 
 
-test :: Pull (Succ Z) (Value (Int, Int))
-test = Pull (\i -> Tup (ixVal i) (ixVal i)) (Succ Z 10) 
 
-test2 :: Exp Block (Manifest (Succ Z) (Int, Int))
-test2 = freezePull test
+-- testing 
+-- tuplePull :: Pull (Succ Z) (Value (Int, Int))
+--tuplePull = Pull (\i -> tup (ixVal i) (ixVal i)) (Succ Z 10) 
+
+-- tupleTest :: Exp Block (Manifest (Succ Z) (Int, Int))
+--tupleTest = freezePull tuplePull
