@@ -1,6 +1,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE FlexibleInstances #-}
+{- LANGAUGE FlexibleContexts #-} 
 {- LANGUAGE OverlappingInstances #-} 
 
 {-# LANGUAGE TypeOperators #-}
@@ -65,19 +66,6 @@ instance EltVal Float
 
 tup = undefined
 
------------------------------------------------------------------
--- Type-wise 
--- (a,b,c,d) => (a :. (b :. (c :. (d :. ()))))
--- (a,(b,c)) => (a :. ((b :. (c :. ())) :. ()))
-
--- Data-wise
--- (a,b,c,d) => TupS a (TupS b (TupS c (Tup1 d)))
--- (a,(b,c)) => TupS a (Tup1 (TupS b (Tup1 c)))
-
--- Just an initial experiment. 
-
------------------------------------------------------------------ 
-
   
 
 -- | Value level expressions.
@@ -86,8 +74,6 @@ data Value a where
   Variable :: String -> Value a
   BinOp    :: BinOp -> Value a -> Value a -> Value a
 
-
-  -- TupE     :: Tuple t => t -> Value (TRep t) 
 
   -- -- | As it stands now, tuples are needed in the embedding.
   -- --   This needs a lot more.. 
