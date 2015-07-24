@@ -64,28 +64,22 @@ instance EltVal Float
 
 -- | Handling of tuples
 
-tup = undefined
-
-  
-
+tup = Tup2
+                          
 -- | Value level expressions.
 data Value a where
   Literal  :: Show a => a -> Value a
   Variable :: String -> Value a
   BinOp    :: BinOp -> Value a -> Value a -> Value a
 
-
-  -- -- | As it stands now, tuples are needed in the embedding.
-  -- --   This needs a lot more.. 
-  -- Tup :: Value a -> Value b -> Value (a,b)
-  -- Fst :: Value (a,b) -> Value a
-  -- Snd :: Value (a,b) -> Value b 
-  
+  Tup2     :: Value a -> Value b -> Value (a,b) 
 
   -- | An Expression computing a scalar at level p can be
   --  converted into a Value
   --  TODO: Look for restrictions that should apply here 
   UnLift   :: EltVal a => Exp p a -> Value a
+  -- Lift/unlift seems to enable arbitraty hierarchy jumps!
+  --  Needs more thought! 
 
   -- | Manifest Arrays can be indexed into
   Index :: Exp p (Manifest sh a) -> Index sh -> Value a 
@@ -315,8 +309,8 @@ freezePull arr@(Pull f n) =
 
 
 -- testing 
--- tuplePull :: Pull (Succ Z) (Value (Int, Int))
---tuplePull = Pull (\i -> tup (ixVal i) (ixVal i)) (Succ Z 10) 
+tuplePull :: Pull (Succ Z) (Value (Int, Int))
+tuplePull = Pull (\i -> tup (ixVal i) (ixVal i)) (Succ Z 10) 
 
--- tupleTest :: Exp Block (Manifest (Succ Z) (Int, Int))
---tupleTest = freezePull tuplePull
+tupleTest :: Exp Block (Manifest (Succ Z) (Int, Int))
+tupleTest = freezePull tuplePull
